@@ -1,0 +1,10 @@
+Django
+djangorestframework
+celery
+redis
+python-telegram-bot
+python-decouple
+djangorestframework-simplejwt
+django-environ
+environs
+psycopg2-binary
