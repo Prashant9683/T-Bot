@@ -54,7 +54,7 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 git clone
-cd django_internship_assignment
+cd T-Bot
 ```
 
 ### 2. Create Virtual Environment
