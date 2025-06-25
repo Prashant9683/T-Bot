@@ -17,7 +17,7 @@ def public_endpoint(request):
     Public endpoint accessible to everyone
     """
     data = {
-        'message': 'Welcome to our Django Internship Assignment API!',
+        'message': 'Welcome to our T-Bot API!',
         'timestamp': timezone.now(),
         'total_users': User.objects.count(),
     }
@@ -112,3 +112,44 @@ def telegram_users_list(request):
     telegram_users = TelegramUser.objects.all()
     serializer = TelegramUserSerializer(telegram_users, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def bot_analytics(request):
+    """Get bot analytics (admin only)"""
+    if not request.user.is_staff:
+        return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+    
+    from .models import BotInteraction
+    from django.db.models import Count
+    from datetime import timedelta
+    
+    # Calculate analytics
+    total_users = TelegramUser.objects.count()
+    active_users_week = TelegramUser.objects.filter(
+        last_interaction__gte=timezone.now() - timedelta(days=7)
+    ).count()
+    
+    total_interactions = BotInteraction.objects.count()
+    interactions_today = BotInteraction.objects.filter(
+        timestamp__date=timezone.now().date()
+    ).count()
+    
+    # Most popular commands
+    popular_commands = BotInteraction.objects.filter(
+        interaction_type='command'
+    ).values('command_or_data').annotate(
+        count=Count('command_or_data')
+    ).order_by('-count')[:5]
+    
+    data = {
+        'total_users': total_users,
+        'active_users_week': active_users_week,
+        'total_interactions': total_interactions,
+        'interactions_today': interactions_today,
+        'popular_commands': list(popular_commands),
+        'engagement_rate': round((active_users_week / max(total_users, 1)) * 100, 2)
+    }
+    
+    return Response(data, status=status.HTTP_200_OK)

@@ -65,10 +65,11 @@ ROOT_URLCONF = 'internship_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -173,3 +174,19 @@ EMAIL_HOST_USER = env.str('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env.str('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = env.str('EMAIL_HOST_USER')
 
+from celery.schedules import crontab
+
+# Celery Beat Schedule
+CELERY_BEAT_SCHEDULE = {
+    'generate-daily-report': {
+        'task': 'main_app.tasks.generate_daily_report',
+        'schedule': crontab(hour=9, minute=0),  # 9 AM daily
+    },
+    'cleanup-old-interactions': {
+        'task': 'main_app.tasks.cleanup_old_interactions',
+        'schedule': crontab(hour=2, minute=0, day_of_week=1),  # Monday 2 AM
+    },
+}
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
